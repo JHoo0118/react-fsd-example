@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { BrowserRouter, useNavigate } from "react-router-dom";
 import { Mock, describe, expect, it, vi } from "vitest";
 import { AuthService, authTypesDto } from "@/shared/api/auth";
-import { AxiosLib } from "@/shared/lib/axios";
+import { KyLib } from "@/shared/lib/ky";
 import { pathKeys } from "@/shared/lib/react-router";
 import { renderWithQueryClient } from "@/shared/lib/test";
 import { LoginForm } from "./login.ui";
@@ -34,7 +34,11 @@ describe("LoginForm", () => {
   it("should call login mutation on valid form submission", async () => {
     const loginUserMutation = vi
       .spyOn(AuthService, "loginUserMutation")
-      .mockResolvedValue(AxiosLib.mockResolvedAxiosResponse(userDto));
+      .mockResolvedValue(
+        await KyLib.mockResolvedKyResponse(userDto).then((response) =>
+          response.json(),
+        ),
+      );
 
     const { click, type } = renderLoginForm();
 
@@ -51,7 +55,9 @@ describe("LoginForm", () => {
     const navigate = vi.fn();
     mockedUseNavigate.mockReturnValue(navigate);
     vi.spyOn(AuthService, "loginUserMutation").mockResolvedValue(
-      AxiosLib.mockResolvedAxiosResponse(userDto),
+      await KyLib.mockResolvedKyResponse(userDto).then((response) =>
+        response.json(),
+      ),
     );
 
     const { click, type } = renderLoginForm();

@@ -1,4 +1,5 @@
-import { AxiosContracts } from "../../lib/axios";
+import { z } from "zod";
+import { KyContracts } from "@/shared/lib/ky";
 import { api } from "../index";
 import {
   CreateUserDtoSchema,
@@ -9,45 +10,51 @@ import {
 import { CreateUserDto, LoginUserDto, UpdateUserDto } from "./auth.types";
 
 export class AuthService {
-  static currentUserQuery(config: { signal?: AbortSignal }) {
-    return api
-      .get("/user", config)
-      .then(AxiosContracts.responseContract(UserDtoSchema));
+  static async currentUserQuery(config: {
+    signal?: AbortSignal;
+  }): Promise<z.infer<typeof UserDtoSchema>> {
+    const response = await api.get("user", { signal: config.signal });
+    return KyContracts.responseContract(UserDtoSchema, response);
   }
 
-  static createUserMutation(data: { createUserDto: CreateUserDto }) {
-    const createUserDto = AxiosContracts.requestContract(
+  static async createUserMutation(data: {
+    createUserDto: CreateUserDto;
+  }): Promise<z.infer<typeof UserDtoSchema>> {
+    const createUserDto = KyContracts.requestContract(
       CreateUserDtoSchema,
       data.createUserDto,
     );
-
-    const { confirmPassword, ...filteredData } = createUserDto;
-    return api
-      .post("/users", { user: filteredData })
-      .then(AxiosContracts.responseContract(UserDtoSchema));
+    const response = await api.post("users", {
+      json: { user: createUserDto },
+    });
+    return KyContracts.responseContract(UserDtoSchema, response);
   }
 
-  static loginUserMutation(data: { loginUserDto: LoginUserDto }) {
-    const loginUserDto = AxiosContracts.requestContract(
+  static async loginUserMutation(data: {
+    loginUserDto: LoginUserDto;
+  }): Promise<z.infer<typeof UserDtoSchema>> {
+    const loginUserDto = KyContracts.requestContract(
       LoginUserDtoSchema,
       data.loginUserDto,
     );
-    return api
-      .post("/users/login", { user: loginUserDto })
-      .then(AxiosContracts.responseContract(UserDtoSchema));
+    const response = await api.post("users/login", {
+      json: { user: loginUserDto },
+    });
+    return KyContracts.responseContract(UserDtoSchema, response);
   }
 
-  static logoutUserMutation() {
+  static logoutUserMutation(): Promise<void> {
     return Promise.resolve();
   }
 
-  static updateUserMutation(data: { updateUserDto: UpdateUserDto }) {
-    const updateUserDto = AxiosContracts.requestContract(
+  static async updateUserMutation(data: {
+    updateUserDto: UpdateUserDto;
+  }): Promise<z.infer<typeof UserDtoSchema>> {
+    const updateUserDto = KyContracts.requestContract(
       UpdateUserDtoSchema,
       data.updateUserDto,
     );
-    return api
-      .put("/user", { user: updateUserDto })
-      .then(AxiosContracts.responseContract(UserDtoSchema));
+    const response = await api.put("user", { json: { user: updateUserDto } });
+    return KyContracts.responseContract(UserDtoSchema, response);
   }
 }

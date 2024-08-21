@@ -1,26 +1,46 @@
-import axios, { AxiosError } from "axios";
+import ky from "ky";
 import { z } from "zod";
+import { useSessionStore } from "@/shared/session";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL,
+export const api = ky.create({
+  prefixUrl: `${import.meta.env.VITE_BASE_URL}`,
+  hooks: {
+    beforeRequest: [
+      (request) => {
+        const { session } = useSessionStore.getState();
+        if (session) {
+          request.headers.set("Authorization", `Bearer ${session.token}`);
+        }
+      },
+    ],
+    afterResponse: [
+      (request, options, response) => {
+        console.log(request, options);
+        if (!response.ok) {
+          return handleGenericError(response);
+        }
+      },
+    ],
+  },
 });
 
-export function handleGenericError(error: AxiosError) {
-  const validation = GenericErrorSchema.safeParse(error.response?.data);
+export function handleGenericError(response: Response): void {
+  response
+    .json()
+    .then((data) => {
+      const validation = GenericErrorSchema.safeParse(data);
 
-  if (validation.error) {
-    return error;
-  }
+      if (!validation.success) {
+        throw new Error(response.statusText || "An error occurred");
+      }
 
-  const message = formatValidationErrors(validation.data);
+      const message = formatValidationErrors(validation.data);
 
-  return new AxiosError(
-    message,
-    error.code,
-    error.config,
-    error.request,
-    error.response,
-  );
+      throw new Error(message);
+    })
+    .catch(() => {
+      throw new Error(response.statusText || "An unexpected error occurred");
+    });
 }
 
 const GenericErrorSchema = z.object({

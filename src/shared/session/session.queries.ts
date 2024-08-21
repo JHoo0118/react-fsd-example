@@ -10,7 +10,7 @@ export class SessionQueries {
       queryKey: ["session", "current-user"],
       queryFn: async ({ signal }) => {
         const response = await AuthService.currentUserQuery({ signal });
-        return transformUserDtoToSession(response.data);
+        return transformUserDtoToSession(response);
       },
 
       initialData: () =>

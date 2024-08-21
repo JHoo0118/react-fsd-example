@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { BrowserRouter, useNavigate } from "react-router-dom";
 import { describe, it, expect, vi, Mock } from "vitest";
 import { AuthService, authTypesDto } from "@/shared/api/auth";
-import { AxiosLib } from "@/shared/lib/axios";
+import { KyLib } from "@/shared/lib/ky";
 import { pathKeys } from "@/shared/lib/react-router";
 import { renderWithQueryClient } from "@/shared/lib/test";
 import { RegisterForm } from "./register.ui";
@@ -39,7 +39,11 @@ describe("RegisterForm", () => {
 
     const createUserMutation = vi
       .spyOn(AuthService, "createUserMutation")
-      .mockResolvedValue(AxiosLib.mockResolvedAxiosResponse(userDto));
+      .mockResolvedValue(
+        await KyLib.mockResolvedKyResponse(userDto).then((response) =>
+          response.json(),
+        ),
+      );
 
     const { click, type } = renderRegisterForm();
 
@@ -94,7 +98,7 @@ const createUserDto: authTypesDto.CreateUserDto = {
   username: "username",
   email: "test@example.com",
   password: "password",
-  confirmPassword: "password",
+  confirmPassword: "confirmPassword",
 };
 
 function renderRegisterForm() {

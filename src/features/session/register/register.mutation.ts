@@ -34,7 +34,7 @@ export function useRegisterMutation(
     onMutate,
 
     onSuccess: async (response, variables, context) => {
-      const { user } = response.data;
+      const { user } = response;
       const { setSession } = useSessionStore.getState();
 
       const session = sessionLib.transformUserDtoToSession({ user });
